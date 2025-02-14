@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LabResult } from "@/lib/types";
 import { format } from "date-fns";
-import { Download, Printer, TestTubes, Flask, Microscope, FlaskConical } from "lucide-react";
+import { Download, Printer } from "lucide-react";
 
 const ResultView = ({
   result,
@@ -32,25 +32,8 @@ const ResultView = ({
   };
 
   return (
-    <div className="space-y-6 animate-slideIn print:animate-none relative">
-      {/* Background Pattern */}
-      <div className="fixed inset-0 pointer-events-none opacity-[0.02] print:opacity-[0.015]">
-        <div className="absolute inset-0 grid grid-cols-6 gap-8 p-8">
-          {Array.from({ length: 24 }).map((_, index) => {
-            const Icon = [TestTubes, Flask, Microscope, FlaskConical][index % 4];
-            return (
-              <div
-                key={index}
-                className="w-full h-full flex items-center justify-center transform rotate-12"
-              >
-                <Icon className="w-12 h-12 text-[#9b87f5]" />
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <Card className="p-6 space-y-6 bg-white/95 backdrop-blur-sm print:bg-white relative z-10">
+    <div className="space-y-6 animate-slideIn print:animate-none">
+      <Card className="p-6 space-y-6">
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-2xl font-semibold">Laboratory Results</h2>
@@ -95,7 +78,7 @@ const ResultView = ({
             {result.results.map((test) => (
               <Card
                 key={test.id}
-                className="p-4 animate-fadeIn print:animate-none bg-white/95 backdrop-blur-sm print:bg-white"
+                className="p-4 animate-fadeIn print:animate-none"
               >
                 <div className="flex justify-between items-start">
                   <div>
@@ -131,7 +114,7 @@ const ResultView = ({
       <Button
         onClick={onBack}
         variant="outline"
-        className="w-full print:hidden transition-all duration-200 hover:bg-accent relative z-10"
+        className="w-full print:hidden transition-all duration-200 hover:bg-accent"
       >
         Back to Form
       </Button>
