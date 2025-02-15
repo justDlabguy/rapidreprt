@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { TestResult, LabResult } from "@/lib/types";
+import { TestResult, LabResult, TestResultValue } from "@/lib/types";
 import { PlusCircle, Trash2 } from "lucide-react";
 
 const LabForm = ({ onSubmit }: { onSubmit: (result: LabResult) => void }) => {
@@ -20,6 +20,7 @@ const LabForm = ({ onSubmit }: { onSubmit: (result: LabResult) => void }) => {
       testName: "",
       value: 0,
       unit: "",
+      resultType: "numerical", // Add default result type
       referenceRange: { min: 0, max: 0 },
       status: "pending",
     };
@@ -31,8 +32,10 @@ const LabForm = ({ onSubmit }: { onSubmit: (result: LabResult) => void }) => {
       tests.map((test) => {
         if (test.id === id) {
           const updatedTest = { ...test, ...updates };
-          // Calculate status
-          if (updatedTest.value && updatedTest.referenceRange.min && updatedTest.referenceRange.max) {
+          // Calculate status for numerical tests only
+          if (typeof updatedTest.value === 'number' && 
+              updatedTest.referenceRange.min !== undefined && 
+              updatedTest.referenceRange.max !== undefined) {
             updatedTest.status =
               updatedTest.value >= updatedTest.referenceRange.min &&
               updatedTest.value <= updatedTest.referenceRange.max
