@@ -1,9 +1,61 @@
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LabResult } from "@/lib/types";
+import { LabResult, TestResult } from "@/lib/types";
 import { format } from "date-fns";
 import { Download, Printer } from "lucide-react";
+
+const ResultValue = ({ test }: { test: TestResult }) => {
+  switch (test.resultType) {
+    case "binary":
+      return (
+        <span className={`font-medium ${
+          test.value === "Positive" ? "text-status-abnormal" : "text-status-normal"
+        }`}>
+          {test.value}
+        </span>
+      );
+    case "categorical":
+      return (
+        <span className={`font-medium ${
+          test.value === "High" || test.value === "Moderate" 
+            ? "text-status-abnormal" 
+            : "text-status-normal"
+        }`}>
+          {test.value}
+        </span>
+      );
+    default:
+      return (
+        <div className="flex items-center gap-2">
+          <span className="text-lg">{test.value}</span>
+          <span className="text-sm text-muted-foreground">
+            {test.unit}
+          </span>
+        </div>
+      );
+  }
+};
+
+const ReferenceRange = ({ test }: { test: TestResult }) => {
+  if (test.referenceRange.options?.length) {
+    return (
+      <p className="text-sm text-muted-foreground mt-2">
+        Expected: {test.referenceRange.options.join(" or ")}
+      </p>
+    );
+  }
+
+  if (test.referenceRange.min !== undefined || test.referenceRange.max !== undefined) {
+    return (
+      <p className="text-sm text-muted-foreground mt-2">
+        Reference Range: {test.referenceRange.min} - {test.referenceRange.max} {test.unit}
+      </p>
+    );
+  }
+
+  return null;
+};
 
 const ResultView = ({
   result,
@@ -30,6 +82,16 @@ const ResultView = ({
     element.click();
     document.body.removeChild(element);
   };
+
+  // Group tests by category
+  const groupedResults = result.results.reduce((acc, test) => {
+    const category = test.category || "Other";
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(test);
+    return acc;
+  }, {} as Record<string, TestResult[]>);
 
   return (
     <div className="space-y-6 animate-slideIn print:animate-none">
@@ -72,42 +134,39 @@ const ResultView = ({
           </div>
         </div>
 
-        <div className="space-y-4">
-          <h3 className="font-medium">Test Results</h3>
-          <div className="grid gap-4">
-            {result.results.map((test) => (
-              <Card
-                key={test.id}
-                className="p-4 animate-fadeIn print:animate-none"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-medium">{test.testName}</h4>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-lg">{test.value}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {test.unit}
-                      </span>
-                    </div>
-                  </div>
-                  <div
-                    className={`px-3 py-1 rounded-full text-sm ${
-                      test.status === "normal"
-                        ? "bg-status-normal/10 text-status-normal"
-                        : test.status === "abnormal"
-                        ? "bg-status-abnormal/10 text-status-abnormal"
-                        : "bg-status-pending/10 text-status-pending"
-                    }`}
+        <div className="space-y-6">
+          {Object.entries(groupedResults).map(([category, tests]) => (
+            <div key={category} className="space-y-4">
+              <h3 className="font-medium text-lg border-b pb-2">{category}</h3>
+              <div className="grid gap-4">
+                {tests.map((test) => (
+                  <Card
+                    key={test.id}
+                    className="p-4 animate-fadeIn print:animate-none"
                   >
-                    {test.status.charAt(0).toUpperCase() + test.status.slice(1)}
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Reference Range: {test.referenceRange.min} - {test.referenceRange.max} {test.unit}
-                </p>
-              </Card>
-            ))}
-          </div>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-medium">{test.testName}</h4>
+                        <ResultValue test={test} />
+                      </div>
+                      <div
+                        className={`px-3 py-1 rounded-full text-sm ${
+                          test.status === "normal"
+                            ? "bg-status-normal/10 text-status-normal"
+                            : test.status === "abnormal"
+                            ? "bg-status-abnormal/10 text-status-abnormal"
+                            : "bg-status-pending/10 text-status-pending"
+                        }`}
+                      >
+                        {test.status.charAt(0).toUpperCase() + test.status.slice(1)}
+                      </div>
+                    </div>
+                    <ReferenceRange test={test} />
+                  </Card>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </Card>
 
