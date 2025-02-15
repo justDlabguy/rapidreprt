@@ -9,7 +9,107 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      lab_results: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          date: string | null
+          id: string
+          patient_id: string
+          patient_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          date?: string | null
+          id?: string
+          patient_id: string
+          patient_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          date?: string | null
+          id?: string
+          patient_id?: string
+          patient_name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          full_name: string | null
+          id: string
+          role: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          role?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          role?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      test_results: {
+        Row: {
+          created_at: string | null
+          id: string
+          lab_result_id: string
+          reference_range_max: number | null
+          reference_range_min: number | null
+          status: string | null
+          test_name: string
+          unit: string | null
+          updated_at: string | null
+          value: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          lab_result_id: string
+          reference_range_max?: number | null
+          reference_range_min?: number | null
+          status?: string | null
+          test_name: string
+          unit?: string | null
+          updated_at?: string | null
+          value?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          lab_result_id?: string
+          reference_range_max?: number | null
+          reference_range_min?: number | null
+          status?: string | null
+          test_name?: string
+          unit?: string | null
+          updated_at?: string | null
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_results_lab_result_id_fkey"
+            columns: ["lab_result_id"]
+            isOneToOne: false
+            referencedRelation: "lab_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
