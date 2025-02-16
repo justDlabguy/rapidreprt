@@ -15,7 +15,7 @@ interface TestFormProps {
 const TestForm = ({ test, onUpdate, onRemove }: TestFormProps) => {
   return (
     <Card className="p-4 animate-fadeIn">
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         <div className="space-y-2">
           <Label>Test Name</Label>
           <Input
@@ -45,7 +45,7 @@ const TestForm = ({ test, onUpdate, onRemove }: TestFormProps) => {
         </div>
         <div className="space-y-2">
           <Label>Reference Range</Label>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Input
               type="number"
               value={test.referenceRange.min || ""}
@@ -74,7 +74,7 @@ const TestForm = ({ test, onUpdate, onRemove }: TestFormProps) => {
             />
           </div>
         </div>
-        <div className="flex items-end">
+        <div className="flex items-center justify-end">
           <Button
             type="button"
             variant="destructive"
