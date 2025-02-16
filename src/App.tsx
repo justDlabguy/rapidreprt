@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import MainLayout from "@/components/layout/MainLayout";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import LabResults from "./pages/LabResults";
@@ -50,7 +51,9 @@ const App = () => {
               path="/dashboard"
               element={
                 isAuthenticated ? (
-                  <Dashboard />
+                  <MainLayout>
+                    <Dashboard />
+                  </MainLayout>
                 ) : (
                   <Navigate to="/auth" replace />
                 )
@@ -60,7 +63,9 @@ const App = () => {
               path="/lab-results"
               element={
                 isAuthenticated ? (
-                  <LabResults />
+                  <MainLayout>
+                    <LabResults />
+                  </MainLayout>
                 ) : (
                   <Navigate to="/auth" replace />
                 )
