@@ -84,10 +84,16 @@ const MainLayout = ({ children }: MainLayoutProps) => {
         )}
       </nav>
 
-      {/* Main content with glass effect */}
+      {/* Main content with glass effect and lab equipment pattern */}
       <main className="container mx-auto px-4 py-8">
-        <div className="backdrop-blur-sm bg-white/50 dark:bg-gray-900/50 rounded-lg shadow-lg">
-          {children}
+        <div className="relative backdrop-blur-sm bg-white/50 dark:bg-gray-900/50 rounded-lg shadow-lg">
+          {/* Subtle lab equipment pattern overlay */}
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(circle_at_1px_1px,black_1px,transparent_0)] dark:bg-[radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] [background-size:40px_40px] z-0" />
+          
+          {/* Main content */}
+          <div className="relative z-10">
+            {children}
+          </div>
         </div>
       </main>
     </div>
