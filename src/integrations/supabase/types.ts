@@ -44,24 +44,75 @@ export type Database = {
           created_at: string | null
           full_name: string | null
           id: string
+          monthly_reports_limit: number | null
+          monthly_reports_used: number | null
           role: string | null
+          subscription_end_date: string | null
+          subscription_status: string | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           full_name?: string | null
           id: string
+          monthly_reports_limit?: number | null
+          monthly_reports_used?: number | null
           role?: string | null
+          subscription_end_date?: string | null
+          subscription_status?: string | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           full_name?: string | null
           id?: string
+          monthly_reports_limit?: number | null
+          monthly_reports_used?: number | null
           role?: string | null
+          subscription_end_date?: string | null
+          subscription_status?: string | null
           updated_at?: string | null
         }
         Relationships: []
+      }
+      report_usage: {
+        Row: {
+          created_at: string | null
+          id: string
+          report_id: string | null
+          report_type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          report_id?: string | null
+          report_type: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          report_id?: string | null
+          report_type?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_usage_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "lab_results"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_usage_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       test_results: {
         Row: {

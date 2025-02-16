@@ -18,6 +18,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   const navItems = [
     { name: "Home", path: "/dashboard" },
     { name: "Recent Reports", path: "/lab-results" },
+    { name: "Billing", path: "/billing" },
   ];
 
   return (

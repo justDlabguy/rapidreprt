@@ -6,12 +6,30 @@ import { useToast } from "@/hooks/use-toast";
 import { TestResult, LabResult } from "@/lib/types";
 import PatientInfoForm from "./lab/PatientInfoForm";
 import TestList from "./lab/TestList";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 
 const LabForm = ({ onSubmit }: { onSubmit: (result: LabResult) => void }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [patientName, setPatientName] = useState("");
   const [patientId, setPatientId] = useState("");
   const [tests, setTests] = useState<TestResult[]>([]);
+
+  const { data: usage } = useQuery({
+    queryKey: ["usage"],
+    queryFn: async () => {
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("subscription_status, monthly_reports_used, monthly_reports_limit")
+        .single();
+
+      if (profileError) throw profileError;
+
+      return profile;
+    },
+  });
 
   const addTest = () => {
     const newTest: TestResult = {
@@ -53,8 +71,28 @@ const LabForm = ({ onSubmit }: { onSubmit: (result: LabResult) => void }) => {
     setTests(tests.filter((test) => test.id !== id));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!usage) {
+      toast({
+        title: "Error",
+        description: "Unable to verify usage limits. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (usage.monthly_reports_used >= usage.monthly_reports_limit) {
+      toast({
+        title: "Usage Limit Reached",
+        description: "Please upgrade your plan to create more reports.",
+        variant: "destructive",
+      });
+      navigate("/billing");
+      return;
+    }
+
     if (!patientName || !patientId) {
       toast({
         title: "Missing Information",
@@ -63,6 +101,7 @@ const LabForm = ({ onSubmit }: { onSubmit: (result: LabResult) => void }) => {
       });
       return;
     }
+
     if (tests.length === 0) {
       toast({
         title: "No Tests Added",
@@ -72,19 +111,37 @@ const LabForm = ({ onSubmit }: { onSubmit: (result: LabResult) => void }) => {
       return;
     }
 
-    const result: LabResult = {
-      id: crypto.randomUUID(),
-      patientName,
-      patientId,
-      date: new Date(),
-      results: tests,
-    };
+    try {
+      const result: LabResult = {
+        id: crypto.randomUUID(),
+        patientName,
+        patientId,
+        date: new Date(),
+        results: tests,
+      };
 
-    onSubmit(result);
-    toast({
-      title: "Success",
-      description: "Lab results have been generated",
-    });
+      // Update usage count
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({
+          monthly_reports_used: usage.monthly_reports_used + 1,
+        })
+        .eq("id", (await supabase.auth.getUser()).data.user?.id);
+
+      if (updateError) throw updateError;
+
+      onSubmit(result);
+      toast({
+        title: "Success",
+        description: "Lab results have been generated",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
