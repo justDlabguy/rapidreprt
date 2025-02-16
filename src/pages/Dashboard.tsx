@@ -85,12 +85,14 @@ const Dashboard = () => {
           : 'complete'
       }));
     },
-    onError: (error: any) => {
-      toast({
-        title: "Error fetching results",
-        description: error.message,
-        variant: "destructive",
-      });
+    meta: {
+      onError: (error: Error) => {
+        toast({
+          title: "Error fetching results",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     }
   });
 
