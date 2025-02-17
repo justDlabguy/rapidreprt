@@ -75,6 +75,47 @@ export type Database = {
         }
         Relationships: []
       }
+      report_interpretations: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          interpretation: Json | null
+          lab_result_id: string
+          recommendations: string[] | null
+          summary: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          interpretation?: Json | null
+          lab_result_id: string
+          recommendations?: string[] | null
+          summary?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          interpretation?: Json | null
+          lab_result_id?: string
+          recommendations?: string[] | null
+          summary?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_interpretations_lab_result_id_fkey"
+            columns: ["lab_result_id"]
+            isOneToOne: false
+            referencedRelation: "lab_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       report_usage: {
         Row: {
           created_at: string | null
