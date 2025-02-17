@@ -16,6 +16,7 @@ const LabForm = ({ onSubmit }: { onSubmit: (result: LabResult) => void }) => {
   const [patientName, setPatientName] = useState("");
   const [patientId, setPatientId] = useState("");
   const [tests, setTests] = useState<TestResult[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: usage, isError, error } = useQuery({
     queryKey: ["usage"],
@@ -96,66 +97,69 @@ const LabForm = ({ onSubmit }: { onSubmit: (result: LabResult) => void }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (isError) {
-      toast({
-        title: "Error",
-        description: "Unable to verify usage limits. Please try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!usage) {
-      toast({
-        title: "Error",
-        description: "Unable to verify usage limits. Please try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (usage.monthly_reports_used >= usage.monthly_reports_limit) {
-      toast({
-        title: "Usage Limit Reached",
-        description: "Please upgrade your plan to create more reports.",
-        variant: "destructive",
-      });
-      navigate("/billing");
-      return;
-    }
-
-    if (!patientName || !patientId) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in patient details",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (tests.length === 0) {
-      toast({
-        title: "No Tests Added",
-        description: "Please add at least one test",
-        variant: "destructive",
-      });
-      return;
-    }
+    setIsSubmitting(true);
 
     try {
+      if (isError) {
+        throw new Error("Unable to verify usage limits. Please try again.");
+      }
+
+      if (!usage) {
+        throw new Error("Unable to verify usage limits. Please try again.");
+      }
+
+      if (usage.monthly_reports_used >= usage.monthly_reports_limit) {
+        navigate("/billing");
+        throw new Error("Please upgrade your plan to create more reports.");
+      }
+
+      if (!patientName || !patientId) {
+        throw new Error("Please fill in patient details");
+      }
+
+      if (tests.length === 0) {
+        throw new Error("Please add at least one test");
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         throw new Error("User not authenticated");
       }
 
-      const result: LabResult = {
-        id: crypto.randomUUID(),
-        patientName,
-        patientId,
-        date: new Date(),
-        results: tests,
-      };
+      // Create lab result
+      const labResultId = crypto.randomUUID();
+      const { error: labResultError } = await supabase
+        .from("lab_results")
+        .insert({
+          id: labResultId,
+          patient_name: patientName,
+          patient_id: patientId,
+          created_by: user.id,
+        });
+
+      if (labResultError) throw labResultError;
+
+      // Create test results
+      const testResults = tests.map(test => ({
+        lab_result_id: labResultId,
+        test_name: test.testName,
+        value: test.value.toString(),
+        unit: test.unit,
+        result_type: test.resultType,
+        status: test.status,
+        reference_range: {
+          min: test.referenceRange.min,
+          max: test.referenceRange.max,
+          options: test.referenceRange.options,
+          threshold: test.referenceRange.threshold,
+        },
+      }));
+
+      const { error: testResultsError } = await supabase
+        .from("test_results")
+        .insert(testResults);
+
+      if (testResultsError) throw testResultsError;
 
       // Update usage count
       const { error: updateError } = await supabase
@@ -167,10 +171,18 @@ const LabForm = ({ onSubmit }: { onSubmit: (result: LabResult) => void }) => {
 
       if (updateError) throw updateError;
 
+      const result: LabResult = {
+        id: labResultId,
+        patientName,
+        patientId,
+        date: new Date(),
+        results: tests,
+      };
+
       onSubmit(result);
       toast({
         title: "Success",
-        description: "Lab results have been generated",
+        description: "Lab results have been saved",
       });
     } catch (error: any) {
       toast({
@@ -178,6 +190,8 @@ const LabForm = ({ onSubmit }: { onSubmit: (result: LabResult) => void }) => {
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -201,8 +215,9 @@ const LabForm = ({ onSubmit }: { onSubmit: (result: LabResult) => void }) => {
       <Button
         type="submit"
         className="w-full transition-all duration-200 hover:bg-primary/90"
+        disabled={isSubmitting}
       >
-        Generate Results
+        {isSubmitting ? "Saving..." : "Generate Results"}
       </Button>
     </form>
   );
