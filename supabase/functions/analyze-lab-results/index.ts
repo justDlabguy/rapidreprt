@@ -35,7 +35,7 @@ serve(async (req) => {
   try {
     const { labResult, labResultId } = await req.json() as { labResult: LabResult; labResultId: string };
 
-    // Create prompt for GPT
+    // Create prompt for Mistral
     const prompt = `Analyze the following lab test results for patient ${labResult.patientName} (ID: ${labResult.patientId}):
 
 ${labResult.results.map(test => `
@@ -63,15 +63,15 @@ Format the response as JSON with the following structure:
   }
 }`;
 
-    // Call OpenAI API
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Call Mistral API
+    const mistralResponse = await fetch('https://api.mistral.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Authorization': `Bearer ${Deno.env.get('MISTRAL_API_KEY')}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'mistral-large-latest',
         messages: [
           {
             role: 'system',
@@ -82,14 +82,15 @@ Format the response as JSON with the following structure:
             content: prompt,
           },
         ],
+        temperature: 0.7,
       }),
     });
 
-    if (!openAIResponse.ok) {
+    if (!mistralResponse.ok) {
       throw new Error('Failed to get AI interpretation');
     }
 
-    const aiData = await openAIResponse.json();
+    const aiData = await mistralResponse.json();
     const interpretation = JSON.parse(aiData.choices[0].message.content);
 
     // Store interpretation in Supabase
