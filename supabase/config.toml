@@ -1,10 +1,32 @@
 
-project_id = "ymkzgfglgqivuzetsplg"
-
 [api]
-enabled = true
-url = "https://ymkzgfglgqivuzetsplg.supabase.co"
-service_role_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlta3pnZmdsZ3FpdnV6ZXRzcGxnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczOTYzMTY3NCwiZXhwIjoyMDU1MjA3Njc0fQ.bGmyT3Bamzx6PQyuDX3GQbWMNmLQGWtomf87IfMDSd0"
+# Do not change these values
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 5432
+major_version = 15
+
+[studio]
+port = 3000
+
+[inbucket]
+port = 54324
+smtp_port = 54325
+pop3_port = 54326
+
+[storage]
+file_size_limit = "50MiB"
+
+[auth]
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://localhost:3000"]
+jwt_expiry = 3600
+enable_signup = true
 
 [functions]
-serve = true
+[functions.analyze-lab-results]
+verify_jwt = false
