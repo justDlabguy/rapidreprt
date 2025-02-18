@@ -1,9 +1,11 @@
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LabResult, TestResult } from "@/lib/types";
 import { format } from "date-fns";
 import { Download, Printer } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/lib/supabase";
+import { useState, useEffect } from "react";
 
 const ResultValue = ({ test }: { test: TestResult }) => {
   switch (test.resultType) {
@@ -64,6 +66,67 @@ const ResultView = ({
   result: LabResult;
   onBack: () => void;
 }) => {
+  const { toast } = useToast();
+  const [interpretation, setInterpretation] = useState<LabInterpretation | null>(null);
+  const [isLoadingInterpretation, setIsLoadingInterpretation] = useState(true);
+
+  useEffect(() => {
+    const fetchInterpretation = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("User not authenticated");
+
+        // First try to fetch existing interpretation
+        const { data: existingInterpretation } = await supabase
+          .from('report_interpretations')
+          .select('*')
+          .eq('lab_result_id', result.id)
+          .single();
+
+        if (existingInterpretation) {
+          setInterpretation({
+            summary: existingInterpretation.summary,
+            recommendations: existingInterpretation.recommendations,
+            interpretation: existingInterpretation.interpretation
+          });
+          setIsLoadingInterpretation(false);
+          return;
+        }
+
+        // If no existing interpretation, generate new one
+        const response = await fetch('/functions/v1/analyze-lab-results', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+          },
+          body: JSON.stringify({
+            labResult: {
+              ...result,
+              created_by: user.id
+            }
+          })
+        });
+
+        if (!response.ok) throw new Error('Failed to analyze results');
+
+        const interpretation = await response.json();
+        setInterpretation(interpretation);
+      } catch (error) {
+        console.error('Error fetching interpretation:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load results interpretation. Please try again later.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingInterpretation(false);
+      }
+    };
+
+    fetchInterpretation();
+  }, [result.id, toast]);
+
   const handlePrint = () => {
     window.print();
   };
@@ -83,7 +146,6 @@ const ResultView = ({
     document.body.removeChild(element);
   };
 
-  // Group tests by category
   const groupedResults = result.results.reduce((acc, test) => {
     const category = test.category || "Other";
     if (!acc[category]) {
@@ -169,6 +231,16 @@ const ResultView = ({
           ))}
         </div>
       </Card>
+
+      {(isLoadingInterpretation || interpretation) && (
+        <div className="space-y-4">
+          <h2 className="text-2xl font-semibold">AI Interpretation</h2>
+          <InterpretationView 
+            interpretation={interpretation!} 
+            isLoading={isLoadingInterpretation} 
+          />
+        </div>
+      )}
 
       <Button
         onClick={onBack}
