@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LabResult, TestResult, LabInterpretation } from "@/lib/types";
@@ -86,9 +87,16 @@ const ResultView = ({
 
         if (existingInterpretation) {
           setInterpretation({
-            summary: existingInterpretation.summary,
-            recommendations: existingInterpretation.recommendations,
-            interpretation: existingInterpretation.interpretation
+            summary: existingInterpretation.summary as string,
+            recommendations: existingInterpretation.recommendations as string[],
+            interpretation: existingInterpretation.interpretation as {
+              concerning_values: Array<{
+                test_name: string;
+                value: string;
+                implication: string;
+              }>;
+              normal_values: string[];
+            }
           });
           setIsLoadingInterpretation(false);
           return;
