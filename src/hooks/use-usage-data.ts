@@ -28,21 +28,31 @@ export const useUsageData = () => {
 
       if (profileError) {
         console.error("Profile fetch error:", profileError);
-        throw new Error("Unable to fetch usage data");
+        // If there's an error fetching profile, return free tier defaults
+        return {
+          subscription_status: 'free',
+          monthly_reports_used: 0,
+          monthly_reports_limit: 10
+        };
       }
 
       if (!profile) {
         console.error("No profile found for user:", user.id);
-        throw new Error("Profile not found");
+        // If no profile exists yet, return free tier defaults
+        return {
+          subscription_status: 'free',
+          monthly_reports_used: 0,
+          monthly_reports_limit: 10
+        };
       }
 
       return {
-        subscription_status: profile.subscription_status,
+        subscription_status: profile.subscription_status || 'free',
         monthly_reports_used: profile.monthly_reports_used || 0,
-        monthly_reports_limit: profile.monthly_reports_limit || 10 // Default limit
+        monthly_reports_limit: profile.monthly_reports_limit || 10
       };
     },
-    retry: 1, // Only retry once to avoid too many failed attempts
+    retry: 1,
     meta: {
       onError: (error: Error) => {
         console.error("Usage data error:", error);
