@@ -1,11 +1,12 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LabResult, TestResult } from "@/lib/types";
+import { LabResult, TestResult, LabInterpretation } from "@/lib/types";
 import { format } from "date-fns";
 import { Download, Printer } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
+import InterpretationView from "@/components/InterpretationView";
 
 const ResultValue = ({ test }: { test: TestResult }) => {
   switch (test.resultType) {
