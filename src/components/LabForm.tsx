@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -126,7 +125,6 @@ const LabForm = ({ onSubmit }: { onSubmit: (result: LabResult) => void }) => {
         throw new Error("User not authenticated");
       }
 
-      // Create lab result
       const labResultId = crypto.randomUUID();
       const { error: labResultError } = await supabase
         .from("lab_results")
@@ -139,20 +137,14 @@ const LabForm = ({ onSubmit }: { onSubmit: (result: LabResult) => void }) => {
 
       if (labResultError) throw labResultError;
 
-      // Create test results
       const testResults = tests.map(test => ({
         lab_result_id: labResultId,
         test_name: test.testName,
-        value: test.value.toString(),
+        value: typeof test.value === 'number' ? test.value : parseFloat(test.value.toString()),
         unit: test.unit,
-        result_type: test.resultType,
         status: test.status,
-        reference_range: {
-          min: test.referenceRange.min,
-          max: test.referenceRange.max,
-          options: test.referenceRange.options,
-          threshold: test.referenceRange.threshold,
-        },
+        reference_range_min: test.referenceRange.min,
+        reference_range_max: test.referenceRange.max,
       }));
 
       const { error: testResultsError } = await supabase
@@ -161,7 +153,6 @@ const LabForm = ({ onSubmit }: { onSubmit: (result: LabResult) => void }) => {
 
       if (testResultsError) throw testResultsError;
 
-      // Update usage count
       const { error: updateError } = await supabase
         .from("profiles")
         .update({
