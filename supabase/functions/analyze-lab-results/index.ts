@@ -3,7 +3,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const mistralApiKey = Deno.env.get('MISTRAL_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,14 +18,14 @@ serve(async (req) => {
   try {
     const { labResult } = await req.json();
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${mistralApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'mistral-small',
         messages: [
           {
             role: 'system',
@@ -36,8 +36,15 @@ serve(async (req) => {
             content: `Please analyze these lab results: ${JSON.stringify(labResult)}`
           }
         ],
+        response_format: { type: "json_object" }
       }),
     });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Mistral API error:', errorData);
+      throw new Error('Failed to analyze results with Mistral AI');
+    }
 
     const data = await response.json();
     const interpretation = JSON.parse(data.choices[0].message.content);
