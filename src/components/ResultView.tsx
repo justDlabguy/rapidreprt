@@ -1,13 +1,13 @@
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LabResult, TestResult, LabInterpretation } from "@/lib/types";
 import { format } from "date-fns";
-import { Download, Printer } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { Download, FileJson, FileSpreadsheet, FilePdf, Printer } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import InterpretationView from "@/components/InterpretationView";
+import html2pdf from "html2pdf.js";
 
 const ResultValue = ({ test }: { test: TestResult }) => {
   switch (test.resultType) {
@@ -71,6 +71,7 @@ const ResultView = ({
   const { toast } = useToast();
   const [interpretation, setInterpretation] = useState<LabInterpretation | null>(null);
   const [isLoadingInterpretation, setIsLoadingInterpretation] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     const fetchInterpretation = async () => {
@@ -78,7 +79,6 @@ const ResultView = ({
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error("User not authenticated");
 
-        // First try to fetch existing interpretation
         const { data: existingInterpretation } = await supabase
           .from('report_interpretations')
           .select('*')
@@ -102,7 +102,6 @@ const ResultView = ({
           return;
         }
 
-        // If no existing interpretation, generate new one
         const response = await fetch('/functions/v1/analyze-lab-results', {
           method: 'POST',
           headers: {
@@ -140,7 +139,38 @@ const ResultView = ({
     window.print();
   };
 
-  const handleDownload = () => {
+  const handlePdfExport = async () => {
+    try {
+      setIsExporting(true);
+      const element = document.getElementById('report-content');
+      if (!element) return;
+
+      const opt = {
+        margin: 1,
+        filename: `lab-report-${result.patientId}-${format(result.date, "yyyy-MM-dd")}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+
+      await html2pdf().set(opt).from(element).save();
+      toast({
+        title: "Success",
+        description: "PDF report has been generated",
+      });
+    } catch (error) {
+      console.error('PDF export error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate PDF report",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleJsonExport = () => {
     const element = document.createElement("a");
     const file = new Blob([JSON.stringify(result, null, 2)], {
       type: "application/json",
@@ -153,6 +183,45 @@ const ResultView = ({
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
+    toast({
+      title: "Success",
+      description: "JSON file has been downloaded",
+    });
+  };
+
+  const handleCsvExport = () => {
+    const headers = ["Test Name", "Value", "Unit", "Status", "Reference Range"];
+    const rows = result.results.map(test => [
+      test.testName,
+      test.value,
+      test.unit,
+      test.status,
+      `${test.referenceRange.min || ''}-${test.referenceRange.max || ''}`
+    ]);
+
+    const csvContent = [
+      `Patient Name: ${result.patientName}`,
+      `Patient ID: ${result.patientId}`,
+      `Date: ${format(result.date, "MMMM d, yyyy")}`,
+      "",
+      headers.join(","),
+      ...rows.map(row => row.join(","))
+    ].join("\n");
+
+    const element = document.createElement("a");
+    const file = new Blob([csvContent], { type: "text/csv" });
+    element.href = URL.createObjectURL(file);
+    element.download = `lab-result-${result.patientId}-${format(
+      result.date,
+      "yyyy-MM-dd"
+    )}.csv`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    toast({
+      title: "Success",
+      description: "CSV file has been downloaded",
+    });
   };
 
   const groupedResults = result.results.reduce((acc, test) => {
@@ -166,7 +235,7 @@ const ResultView = ({
 
   return (
     <div className="space-y-6 animate-slideIn print:animate-none">
-      <Card className="p-6 space-y-6">
+      <Card className="p-6 space-y-6" id="report-content">
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-2xl font-semibold">Laboratory Results</h2>
@@ -186,10 +255,27 @@ const ResultView = ({
             <Button
               variant="outline"
               size="icon"
-              onClick={handleDownload}
+              onClick={handlePdfExport}
+              disabled={isExporting}
               className="transition-all duration-200 hover:bg-accent"
             >
-              <Download className="h-4 w-4" />
+              <FilePdf className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleJsonExport}
+              className="transition-all duration-200 hover:bg-accent"
+            >
+              <FileJson className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleCsvExport}
+              className="transition-all duration-200 hover:bg-accent"
+            >
+              <FileSpreadsheet className="h-4 w-4" />
             </Button>
           </div>
         </div>
