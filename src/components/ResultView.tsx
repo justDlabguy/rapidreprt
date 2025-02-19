@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LabResult, TestResult, LabInterpretation } from "@/lib/types";
 import { format } from "date-fns";
-import { Download, FileJson, FileSpreadsheet, FilePdf, Printer } from "lucide-react";
+import { Download, FileText, FileSpreadsheet, FilePdf2 as FilePdf, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
@@ -267,7 +267,7 @@ const ResultView = ({
               onClick={handleJsonExport}
               className="transition-all duration-200 hover:bg-accent"
             >
-              <FileJson className="h-4 w-4" />
+              <FileText className="h-4 w-4" />
             </Button>
             <Button
               variant="outline"
