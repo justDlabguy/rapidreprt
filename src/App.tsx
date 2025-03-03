@@ -1,64 +1,105 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
 import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import MainLayout from "@/components/layout/MainLayout";
-import Index from "@/pages/Index";
-import Auth from "@/pages/Auth";
-import Dashboard from "@/pages/Dashboard";
-import LabResults from "@/pages/LabResults";
-import Settings from "@/pages/Settings";
-import Billing from "@/pages/Billing";
-import NotFound from "@/pages/NotFound";
+import Index from "./pages/Index";
+import Dashboard from "./pages/Dashboard";
+import LabResults from "./pages/LabResults";
+import Settings from "./pages/Settings";
+import Auth from "./pages/Auth";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-function App() {
+const App = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    // Check current auth status
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Show nothing while we check auth status
+  if (isAuthenticated === null) {
+    return null;
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          
-          <Route 
-            path="/dashboard" 
-            element={
-              <MainLayout>
-                <Dashboard />
-              </MainLayout>
-            } 
-          />
-          <Route 
-            path="/lab-results" 
-            element={
-              <MainLayout>
-                <LabResults />
-              </MainLayout>
-            } 
-          />
-          <Route 
-            path="/settings" 
-            element={
-              <MainLayout>
-                <Settings />
-              </MainLayout>
-            } 
-          />
-          <Route 
-            path="/billing" 
-            element={
-              <MainLayout>
-                <Billing />
-              </MainLayout>
-            } 
-          />
-          
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+      <TooltipProvider>
         <Toaster />
-      </BrowserRouter>
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route
+              path="/dashboard"
+              element={
+                isAuthenticated ? (
+                  <MainLayout>
+                    <Dashboard />
+                  </MainLayout>
+                ) : (
+                  <Navigate to="/auth" replace />
+                )
+              }
+            />
+            <Route
+              path="/lab-results"
+              element={
+                isAuthenticated ? (
+                  <MainLayout>
+                    <LabResults />
+                  </MainLayout>
+                ) : (
+                  <Navigate to="/auth" replace />
+                )
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                isAuthenticated ? (
+                  <MainLayout>
+                    <Settings />
+                  </MainLayout>
+                ) : (
+                  <Navigate to="/auth" replace />
+                )
+              }
+            />
+            <Route
+              path="/auth"
+              element={
+                !isAuthenticated ? (
+                  <Auth />
+                ) : (
+                  <Navigate to="/dashboard" replace />
+                )
+              }
+            />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
     </QueryClientProvider>
   );
-}
+};
 
 export default App;
