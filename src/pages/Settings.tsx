@@ -38,7 +38,7 @@ const Settings = () => {
 
       if (error) {
         console.error("Error fetching profile:", error);
-        return;
+        // Don't return here to allow the component to render with default values
       }
 
       if (profile) {
