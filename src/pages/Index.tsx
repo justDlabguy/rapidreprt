@@ -55,7 +55,7 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Hero Section - Reverting to previous design */}
+      {/* Hero Section */}
       <section className="bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-24">
           <div className="lg:grid lg:grid-cols-12 lg:gap-8">
