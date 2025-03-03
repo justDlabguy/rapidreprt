@@ -10,6 +10,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import LabResults from "./pages/LabResults";
+import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -65,6 +66,18 @@ const App = () => {
                 isAuthenticated ? (
                   <MainLayout>
                     <LabResults />
+                  </MainLayout>
+                ) : (
+                  <Navigate to="/auth" replace />
+                )
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                isAuthenticated ? (
+                  <MainLayout>
+                    <Settings />
                   </MainLayout>
                 ) : (
                   <Navigate to="/auth" replace />

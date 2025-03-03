@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
@@ -37,11 +36,14 @@ const Settings = () => {
         .eq("id", user.id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching profile:", error);
+        return;
+      }
 
       if (profile) {
         setFullName(profile.full_name || "");
-        setAvatarUrl(profile.avatar_url);
+        setAvatarUrl(profile.avatar_url || null);
       }
     } catch (error) {
       console.error("Error fetching profile:", error);

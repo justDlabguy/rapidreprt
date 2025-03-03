@@ -1,11 +1,15 @@
 
 import { useEffect, useState } from "react";
-import { Link, useNavigate, Outlet } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Settings, LogOut } from "lucide-react";
 
-const MainLayout = () => {
+interface MainLayoutProps {
+  children: React.ReactNode;
+}
+
+const MainLayout = ({ children }: MainLayoutProps) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
 
@@ -57,7 +61,7 @@ const MainLayout = () => {
         </div>
       </header>
       <main className="container mx-auto py-6">
-        <Outlet />
+        {children}
       </main>
     </div>
   );
