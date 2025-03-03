@@ -1,11 +1,11 @@
 
-import { Home, BarChart, Settings, Flask, CreditCard } from "lucide-react";
+import { Home, Settings, CreditCard, Beaker } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 export const Sidebar = () => {
   const navItems = [
     { to: "/dashboard", icon: <Home className="w-5 h-5" />, label: "Dashboard" },
-    { to: "/lab-results", icon: <Flask className="w-5 h-5" />, label: "Lab Results" },
+    { to: "/lab-results", icon: <Beaker className="w-5 h-5" />, label: "Lab Results" },
     { to: "/billing", icon: <CreditCard className="w-5 h-5" />, label: "Billing" },
     { to: "/settings", icon: <Settings className="w-5 h-5" />, label: "Settings" },
   ];
