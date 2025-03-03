@@ -55,41 +55,55 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <div className="relative isolate overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#D3E4FD] to-[#F1F9FF] -z-10"></div>
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQ0MCIgaGVpZ2h0PSI3NjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IHgxPSIxMDAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiIGlkPSJhIj48c3RvcCBzdG9wLWNvbG9yPSIjRkZGIiBzdG9wLW9wYWNpdHk9Ii4yNSIgb2Zmc2V0PSIwJSIvPjxzdG9wIHN0b3AtY29sb3I9IiNGRkYiIHN0b3Atb3BhY2l0eT0iMCIgb2Zmc2V0PSIxMDAlIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHBhdGggZD0iTTAgMGgxNDQwdjc2MEgweiIgZmlsbD0idXJsKCNhKSIgZmlsbC1ydWxlPSJldmVub2RkIiBvcGFjaXR5PSIuMiIvPjwvc3ZnPg==')]" 
-          style={{ backgroundSize: 'cover', backgroundPosition: 'center', mixBlendMode: 'overlay', opacity: 0.7 }}
-        ></div>
-        
-        <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:py-40 lg:px-8 relative z-10">
-          <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-4">
-              <span className="text-[#0FA0CE]">Free</span> lab report generating software
-            </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-xl text-gray-600">
-              Generate accurate, professional lab reports in minutes with AI
-            </p>
-            <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                size="lg"
-                onClick={() => navigate("/lab-results")}
-                className="bg-[#0FA0CE] hover:bg-[#0D8EB9] text-white font-medium px-8 py-3 rounded-md"
-              >
-                Generate Result
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => navigate("/auth")}
-                className="bg-[#222] hover:bg-[#333] text-white border-0 font-medium px-8 py-3 rounded-md"
-              >
-                Sign in
-              </Button>
+      {/* Hero Section - Reverting to previous design */}
+      <section className="bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-24">
+          <div className="lg:grid lg:grid-cols-12 lg:gap-8">
+            <div className="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left">
+              <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
+                <span className="block xl:inline">Generate lab reports</span>{" "}
+                <span className="block text-[#0FA0CE] xl:inline">in seconds</span>
+              </h1>
+              <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-xl lg:text-lg xl:text-xl">
+                Our AI-powered platform analyzes your lab results and generates comprehensive, 
+                professional reports instantly. Save time and improve accuracy.
+              </p>
+              <div className="mt-8 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left lg:mx-0">
+                <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
+                  <div className="rounded-md shadow">
+                    <Button
+                      className="w-full bg-[#0FA0CE] hover:bg-[#0D8EB9] px-8 py-3 text-base font-medium text-white"
+                      onClick={() => navigate("/lab-results")}
+                    >
+                      Get Started
+                    </Button>
+                  </div>
+                  <div className="mt-3 sm:mt-0 sm:ml-3">
+                    <Button
+                      variant="outline"
+                      className="w-full bg-[#222] hover:bg-[#333] text-white border-0 px-8 py-3"
+                      onClick={() => navigate("/auth")}
+                    >
+                      Sign In
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="mt-12 relative sm:max-w-lg sm:mx-auto lg:mt-0 lg:max-w-none lg:mx-0 lg:col-span-6 lg:flex lg:items-center">
+              <div className="relative mx-auto w-full rounded-lg shadow-lg lg:max-w-md">
+                <div className="relative block w-full bg-white rounded-lg overflow-hidden">
+                  <img
+                    className="w-full"
+                    src="https://images.unsplash.com/photo-1576086213369-97a306d36557?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1180&q=80"
+                    alt="Lab results"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Features Section */}
       <div id="features" className="py-24 sm:py-32">
