@@ -18,6 +18,8 @@ serve(async (req) => {
   try {
     const { labResult } = await req.json();
 
+    console.log('Received lab result for analysis:', JSON.stringify(labResult));
+
     const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -47,6 +49,7 @@ serve(async (req) => {
     }
 
     const data = await response.json();
+    console.log('Received Mistral AI response:', data);
     const interpretation = JSON.parse(data.choices[0].message.content);
 
     // Save interpretation to database
@@ -65,7 +68,12 @@ serve(async (req) => {
         created_by: labResult.created_by,
       });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error saving interpretation to database:', error);
+      throw error;
+    }
+
+    console.log('Successfully saved interpretation to database');
 
     return new Response(JSON.stringify(interpretation), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

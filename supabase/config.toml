@@ -29,4 +29,4 @@ enable_signup = true
 
 [functions]
 [functions.analyze-lab-results]
-verify_jwt = false
+verify_jwt = true
