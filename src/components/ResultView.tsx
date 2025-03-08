@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LabResult, LabInterpretation } from "@/lib/types";
@@ -22,7 +23,7 @@ const ResultView = ({
   const [isExporting, setIsExporting] = useState(false);
   const [interpretationError, setInterpretationError] = useState<string | null>(null);
 
-  // Move fetchInterpretation inside the component scope so it's available to all component code
+  // Define fetchInterpretation inside the component scope so it's available to all component code
   const fetchInterpretation = async () => {
     try {
       // Get current session
@@ -112,7 +113,7 @@ const ResultView = ({
 
   useEffect(() => {
     fetchInterpretation();
-  }, [result.id, toast]);
+  }, [result.id]);
 
   return (
     <div className="space-y-6 animate-slideIn print:animate-none">
