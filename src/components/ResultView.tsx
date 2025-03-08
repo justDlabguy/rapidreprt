@@ -23,94 +23,94 @@ const ResultView = ({
   const [isExporting, setIsExporting] = useState(false);
   const [interpretationError, setInterpretationError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchInterpretation = async () => {
-      try {
-        // Get current session
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.error('Session error:', sessionError);
-          throw new Error("Authentication error");
-        }
-        
-        if (!sessionData.session) {
-          console.error('No active session found');
-          throw new Error("User not authenticated");
-        }
-
-        // First check if interpretation already exists
-        const { data: existingInterpretation, error: fetchError } = await supabase
-          .from('report_interpretations')
-          .select('*')
-          .eq('lab_result_id', result.id)
-          .single();
-
-        if (fetchError && fetchError.code !== 'PGRST116') { // Not found error is ok
-          console.error('Error fetching existing interpretation:', fetchError);
-          throw new Error("Failed to check existing interpretations");
-        }
-
-        if (existingInterpretation) {
-          console.log('Found existing interpretation:', existingInterpretation);
-          setInterpretation({
-            summary: existingInterpretation.summary as string,
-            recommendations: existingInterpretation.recommendations as string[],
-            interpretation: existingInterpretation.interpretation as {
-              concerning_values: Array<{
-                test_name: string;
-                value: string;
-                implication: string;
-              }>;
-              normal_values: string[];
-            }
-          });
-          setIsLoadingInterpretation(false);
-          return;
-        }
-
-        // If no existing interpretation, call the edge function
-        console.log('Calling analyze-lab-results function with data:', {
-          ...result,
-          created_by: sessionData.session.user.id
-        });
-
-        const response = await fetch('/functions/v1/analyze-lab-results', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${sessionData.session.access_token}`
-          },
-          body: JSON.stringify({
-            labResult: {
-              ...result,
-              created_by: sessionData.session.user.id
-            }
-          })
-        });
-
-        if (!response.ok) {
-          const errorData = await response.text();
-          console.error('Edge function error response:', errorData);
-          throw new Error(`Failed to analyze results: ${response.status} ${response.statusText}`);
-        }
-
-        const interpretation = await response.json();
-        console.log('Received interpretation:', interpretation);
-        setInterpretation(interpretation);
-      } catch (error) {
-        console.error('Error fetching interpretation:', error);
-        setInterpretationError((error as Error).message);
-        toast({
-          title: "Error",
-          description: `Failed to load results interpretation: ${(error as Error).message}`,
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoadingInterpretation(false);
+  const fetchInterpretation = async () => {
+    try {
+      // Get current session
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        throw new Error("Authentication error");
       }
-    };
+      
+      if (!sessionData.session) {
+        console.error('No active session found');
+        throw new Error("User not authenticated");
+      }
 
+      // First check if interpretation already exists
+      const { data: existingInterpretation, error: fetchError } = await supabase
+        .from('report_interpretations')
+        .select('*')
+        .eq('lab_result_id', result.id)
+        .single();
+
+      if (fetchError && fetchError.code !== 'PGRST116') { // Not found error is ok
+        console.error('Error fetching existing interpretation:', fetchError);
+        throw new Error("Failed to check existing interpretations");
+      }
+
+      if (existingInterpretation) {
+        console.log('Found existing interpretation:', existingInterpretation);
+        setInterpretation({
+          summary: existingInterpretation.summary as string,
+          recommendations: existingInterpretation.recommendations as string[],
+          interpretation: existingInterpretation.interpretation as {
+            concerning_values: Array<{
+              test_name: string;
+              value: string;
+              implication: string;
+            }>;
+            normal_values: string[];
+          }
+        });
+        setIsLoadingInterpretation(false);
+        return;
+      }
+
+      // If no existing interpretation, call the edge function
+      console.log('Calling analyze-lab-results function with data:', {
+        ...result,
+        created_by: sessionData.session.user.id
+      });
+
+      const response = await fetch('/functions/v1/analyze-lab-results', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionData.session.access_token}`
+        },
+        body: JSON.stringify({
+          labResult: {
+            ...result,
+            created_by: sessionData.session.user.id
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('Edge function error response:', errorData);
+        throw new Error(`Failed to analyze results: ${response.status} ${response.statusText}`);
+      }
+
+      const interpretation = await response.json();
+      console.log('Received interpretation:', interpretation);
+      setInterpretation(interpretation);
+    } catch (error) {
+      console.error('Error fetching interpretation:', error);
+      setInterpretationError((error as Error).message);
+      toast({
+        title: "Error",
+        description: `Failed to load results interpretation: ${(error as Error).message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingInterpretation(false);
+    }
+  };
+
+  useEffect(() => {
     fetchInterpretation();
   }, [result.id, toast]);
 
