@@ -26,6 +26,9 @@ const ResultView = ({
   // Define fetchInterpretation inside the component scope so it's available to all component code
   const fetchInterpretation = async () => {
     try {
+      setIsLoadingInterpretation(true);
+      setInterpretationError(null);
+      
       // Get current session
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
@@ -39,6 +42,8 @@ const ResultView = ({
         throw new Error("User not authenticated");
       }
 
+      console.log('Checking for existing interpretation for lab result ID:', result.id);
+      
       // First check if interpretation already exists
       const { data: existingInterpretation, error: fetchError } = await supabase
         .from('report_interpretations')
@@ -46,27 +51,42 @@ const ResultView = ({
         .eq('lab_result_id', result.id)
         .single();
 
-      if (fetchError && fetchError.code !== 'PGRST116') { // Not found error is ok
-        console.error('Error fetching existing interpretation:', fetchError);
-        throw new Error("Failed to check existing interpretations");
+      if (fetchError) {
+        // Not found error is ok, we'll generate a new interpretation
+        if (fetchError.code !== 'PGRST116') { 
+          console.error('Error fetching existing interpretation:', fetchError);
+          throw new Error("Failed to check existing interpretations");
+        }
+        console.log('No existing interpretation found, will generate new one');
       }
 
       if (existingInterpretation) {
         console.log('Found existing interpretation:', existingInterpretation);
-        setInterpretation({
-          summary: existingInterpretation.summary as string,
-          recommendations: existingInterpretation.recommendations as string[],
-          interpretation: existingInterpretation.interpretation as {
-            concerning_values: Array<{
-              test_name: string;
-              value: string;
-              implication: string;
-            }>;
-            normal_values: string[];
-          }
-        });
-        setIsLoadingInterpretation(false);
-        return;
+        
+        try {
+          // Ensure the interpretation has the expected structure
+          const parsedInterpretation: LabInterpretation = {
+            summary: existingInterpretation.summary || "No summary available",
+            recommendations: Array.isArray(existingInterpretation.recommendations) 
+              ? existingInterpretation.recommendations 
+              : [],
+            interpretation: {
+              concerning_values: Array.isArray(existingInterpretation.interpretation?.concerning_values)
+                ? existingInterpretation.interpretation.concerning_values
+                : [],
+              normal_values: Array.isArray(existingInterpretation.interpretation?.normal_values)
+                ? existingInterpretation.interpretation.normal_values
+                : []
+            }
+          };
+          
+          setInterpretation(parsedInterpretation);
+          setIsLoadingInterpretation(false);
+          return;
+        } catch (parseError) {
+          console.error('Error parsing existing interpretation:', parseError);
+          throw new Error("Invalid interpretation data format");
+        }
       }
 
       // If no existing interpretation, call the edge function
@@ -95,9 +115,9 @@ const ResultView = ({
         throw new Error(`Failed to analyze results: ${response.status} ${response.statusText}`);
       }
 
-      const interpretation = await response.json();
-      console.log('Received interpretation:', interpretation);
-      setInterpretation(interpretation);
+      const interpretationResult = await response.json();
+      console.log('Received interpretation:', interpretationResult);
+      setInterpretation(interpretationResult);
     } catch (error) {
       console.error('Error fetching interpretation:', error);
       setInterpretationError((error as Error).message);
@@ -112,8 +132,17 @@ const ResultView = ({
   };
 
   useEffect(() => {
-    fetchInterpretation();
+    if (result && result.id) {
+      console.log('Fetching interpretation for result ID:', result.id);
+      fetchInterpretation();
+    }
   }, [result.id]);
+
+  const handleRetryAnalysis = () => {
+    setIsLoadingInterpretation(true);
+    setInterpretationError(null);
+    fetchInterpretation();
+  };
 
   return (
     <div className="space-y-6 animate-slideIn print:animate-none">
@@ -152,11 +181,7 @@ const ResultView = ({
           <Card className="p-6 space-y-4 text-center">
             <p className="text-red-500">Error: {interpretationError}</p>
             <Button 
-              onClick={() => {
-                setIsLoadingInterpretation(true);
-                setInterpretationError(null);
-                fetchInterpretation();
-              }}
+              onClick={handleRetryAnalysis}
               variant="outline"
             >
               Retry Analysis

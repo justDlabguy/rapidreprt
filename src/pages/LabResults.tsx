@@ -1,18 +1,42 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import LabForm from "@/components/LabForm";
 import ResultView from "@/components/ResultView";
 import { LabResult } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate, useLocation } from "react-router-dom";
 
-const Index = () => {
+const LabResults = () => {
   const [result, setResult] = useState<LabResult | null>(null);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Check if we have lab results in the location state when navigating from another page
+    if (location.state && location.state.labResult) {
+      try {
+        setResult(location.state.labResult);
+      } catch (error) {
+        console.error("Error setting lab result from location state:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load saved lab results",
+          variant: "destructive",
+        });
+      }
+    }
+  }, [location.state]);
 
   const handleSubmit = (labResult: LabResult) => {
     setResult(labResult);
+    // Update location state to preserve result during navigation
+    navigate("", { state: { labResult } });
   };
 
   const handleBack = () => {
     setResult(null);
+    navigate("", { state: {} });
   };
 
   return (
@@ -31,4 +55,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default LabResults;

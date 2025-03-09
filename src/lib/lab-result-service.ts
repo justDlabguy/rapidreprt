@@ -9,6 +9,8 @@ export const saveLabResult = async (
   userId: string,
   tests: TestResult[]
 ) => {
+  console.log(`Saving lab result ${labResultId} for user ${userId}`);
+  
   const { error: labResultError } = await supabase
     .from("lab_results")
     .insert({
@@ -18,7 +20,10 @@ export const saveLabResult = async (
       created_by: userId,
     });
 
-  if (labResultError) throw labResultError;
+  if (labResultError) {
+    console.error("Error saving lab result:", labResultError);
+    throw labResultError;
+  }
 
   const testResults = tests.map(test => ({
     lab_result_id: labResultId,
@@ -34,10 +39,17 @@ export const saveLabResult = async (
     .from("test_results")
     .insert(testResults);
 
-  if (testResultsError) throw testResultsError;
+  if (testResultsError) {
+    console.error("Error saving test results:", testResultsError);
+    throw testResultsError;
+  }
+  
+  console.log("Successfully saved lab result and test results");
 };
 
 export const updateUsageCount = async (userId: string, currentUsage: number) => {
+  console.log(`Updating usage count for user ${userId} from ${currentUsage} to ${currentUsage + 1}`);
+  
   const { error: updateError } = await supabase
     .from("profiles")
     .update({
@@ -45,5 +57,28 @@ export const updateUsageCount = async (userId: string, currentUsage: number) => 
     })
     .eq("id", userId);
 
-  if (updateError) throw updateError;
+  if (updateError) {
+    console.error("Error updating usage count:", updateError);
+    throw updateError;
+  }
+  
+  console.log("Successfully updated usage count");
+};
+
+export const getLabResults = async (userId: string) => {
+  console.log(`Fetching lab results for user ${userId}`);
+  
+  const { data, error } = await supabase
+    .from("lab_results")
+    .select("*")
+    .eq("created_by", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching lab results:", error);
+    throw error;
+  }
+  
+  console.log(`Found ${data?.length || 0} lab results`);
+  return data;
 };
